@@ -1,22 +1,45 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
+import { NDrawer, NDrawerContent } from 'naive-ui';
 import SkillData from '@/entities/skill.data';
 
 export default defineComponent({
     name: 'CharacterSheetSkills',
+    components: { NDrawer, NDrawerContent },
     data() {
         return {
+            show: ref(false),
+            screenWidth: window.innerWidth,
             skills: SkillData.getArray,
+            skillsList: SkillData.getList,
             groups: SkillData.getGroup,
-            groupsOrder: ['physical', 'healing', 'combat', 'social', 'information'],
+            groupsOrder: ['physical', 'common', 'combat', 'social', 'information', 'knowledge'],
+            showSkill: '',
         };
     },
+    computed: {
+        drawerWidth(): string | number {
+            return this.screenWidth > 820 ? 768 : '90%';
+        },
+    },
+    mounted() {
+        this.$nextTick(() => {
+            window.addEventListener('resize', this.onResize);
+        });
+    },
+    beforeUnmount() {
+        window.removeEventListener('resize', this.onResize);
+    },
     methods: {
+        onResize(): void {
+            this.screenWidth = window.innerWidth;
+        },
+        handlerShowSkill(skillTitle: string): void {
+            this.show = true;
+            this.showSkill = skillTitle;
+        },
         getSkillsByGroup(group: string) {
-            return this.skills
-                .filter((skill) => skill.group === group)
-                .filter((skill) => skill.group !== 'profession')
-                .filter((skill) => skill.group !== 'knowledge');
+            return this.skills.filter((skill) => skill.group === group).filter((skill) => skill.group !== 'profession');
         },
     },
 });
@@ -34,7 +57,9 @@ export default defineComponent({
                         :key="skill.title"
                         class="character-sheet-skills__item"
                     >
-                        <span class="character-sheet-skills__item-title">{{ skill.title }}</span>
+                        <span class="character-sheet-skills__item-title" @click="handlerShowSkill(skill.title)">{{
+                            skill.title
+                        }}</span>
                         <span class="character-sheet-skill__item-value">1</span>
                     </div>
                 </div>
@@ -46,6 +71,11 @@ export default defineComponent({
                 <span class="character-sheet-skill__item-value">1</span>
             </div>
         </div> -->
+        <n-drawer v-model:show="show" :width="drawerWidth">
+            <n-drawer-content :title="skillsList[showSkill].title" :native-scrollbar="false" closable>
+                {{ skillsList[showSkill].description }}
+            </n-drawer-content>
+        </n-drawer>
     </div>
 </template>
 
